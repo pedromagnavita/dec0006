@@ -1,382 +1,420 @@
-#include <array>
-// std::array
-#include <cstddef>
-// std::size_t
-#include <initializer_list>
-// {...}
-#include <iostream>
-// std::clog
-#include <iterator>
-// std::size
-
 #include "gtest/gtest.h"
-// testing::InitGoogleTest
-// RUN_ALL_TESTS
+#include "MinhaArvoreAVL.h"
 
-#include "excecoes.h"
-// ExcecaoListaEncadeadaVazia
-// ExcecaoPosicaoInvalida
-#include "ListaEncadeadaAbstrata.h"
-// ListaEncadeadaAbstrata
-#include "MinhaListaEncadeada.h"
-// MinhaListaEncadeada
-
-using std::clog;
-using std::size;
-
-using testing::InitGoogleTest;
-
-template class MinhaListaEncadeada<int>;
-template class MinhaListaEncadeada<std::string>;
-
-template<typename T>
-struct Esperado
+TEST(ArvoreAVLTest, Inicializacao)
 {
-    T dado;
-    std::size_t posicao;
-};
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
 
-TEST(TesteListaEncadeada, Inicializacao)
-{
-    using T = int;
+    ASSERT_TRUE(arvore->vazia());
+    ASSERT_EQ(arvore->quantidade(), 0);
 
-    ListaEncadeadaAbstrata<T> const* const lista{new MinhaListaEncadeada<T>};
-
+    ASSERT_TRUE(!arvore->contem(1));
+    ASSERT_TRUE(!arvore->altura(1));
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(1));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(1));
+    
+    ListaEncadeadaAbstrata<int>* lista{arvore->emOrdem()};
+    ASSERT_TRUE(lista != nullptr);
     ASSERT_TRUE(lista->vazia());
-    ASSERT_EQ(lista->tamanho(), 0);
-
     delete lista;
-}
 
-TEST(TesteListaEncadeada, InsercaoNoInicio)
-{
-    using T = int;
-
-    ListaEncadeadaAbstrata<T>* const lista{new MinhaListaEncadeada<T>};
-
-    std::array<Esperado<T>, 5> const esperados
-    {{
-        {0,     4},
-        {10,    3},
-        {20,    2},
-        {30,    1},
-        {40,    0}
-    }};
-
-    for (Esperado<T> const& esperado: esperados)
-        lista->inserirNoInicio(esperado.dado);
-
-    ASSERT_EQ(lista->tamanho(), size(esperados));
-    ASSERT_TRUE(!lista->vazia());
-    
-    for (Esperado<T> const& esperado: esperados)
-    {
-        ASSERT_EQ(lista->posicao(esperado.dado), esperado.posicao);
-        ASSERT_TRUE(lista->contem(esperado.dado));
-    }
-
-    delete lista;
-}
-
-TEST(TesteListaEncadeada, Insercao)
-{
-    using T = int;
-
-    ListaEncadeadaAbstrata<T>* lista{nullptr};
-
-    // Posições inválidas
-    {
-        lista = new MinhaListaEncadeada<T>;
-
-        T const dado{0};
-
-        for (std::size_t const posicao: {1, 2, 100})
-            ASSERT_THROW(lista->inserir(posicao, dado), ExcecaoPosicaoInvalida);
-        
-        ASSERT_EQ(lista->tamanho(), 0);
-        ASSERT_TRUE(lista->vazia());
-        ASSERT_THROW(lista->posicao(dado), ExcecaoListaEncadeadaVazia);
-        ASSERT_TRUE(!lista->contem(dado));
-
-        delete lista;
-    }
-
-    // Inserção no fim
-    {
-        lista = new MinhaListaEncadeada<T>;
-
-        std::array<Esperado<T>, 6> const esperados
-        {{
-            {0,     0},
-            {10,    1},
-            {20,    2},
-            {30,    3},
-            {40,    4},
-            {10,    1}
-        }};
-
-        for (std::size_t i{0}; i < size(esperados); ++i)
-            lista->inserir(i, esperados[i].dado);
-        
-        ASSERT_THROW(lista->posicao(50), ExcecaoDadoInexistente);
-        
-        ASSERT_THROW
-        (
-            lista->inserir(size(esperados) + 1, 0),
-            ExcecaoPosicaoInvalida
-        );
-
-        ASSERT_EQ(lista->tamanho(), size(esperados));
-        ASSERT_TRUE(!lista->vazia());
-        
-        for (Esperado<T> const& esperado: esperados)
-        {
-            ASSERT_EQ(lista->posicao(esperado.dado), esperado.posicao);
-            ASSERT_TRUE(lista->contem(esperado.dado));
-        }
-
-        delete lista;
-    }
-
-    // Inserção no início e no meio
-    {
-        lista = new MinhaListaEncadeada<T>;
-
-        std::array<Esperado<T>, 5> const dados
-        {{
-            {0,     0},
-            {10,    1},
-            {20,    2},
-            {30,    3},
-            {40,    4}
-        }};
-
-        for (Esperado<T> const& dado: dados)
-            lista->inserir(dado.posicao, dado.dado);
-        
-        std::array<Esperado<T>, 2> const esperados
-        {{
-            {50,    0},
-            {60,    3}
-        }};
-
-        for (Esperado<T> const& esperado: esperados)
-            lista->inserir(esperado.posicao, esperado.dado);
-
-        ASSERT_EQ(lista->tamanho(), size(dados) + size(esperados));
-
-        for (Esperado<T> const& esperado: esperados)
-        {
-            ASSERT_EQ(lista->posicao(esperado.dado), esperado.posicao);
-            ASSERT_TRUE(lista->contem(esperado.dado));
-        }
-
-        delete lista;
-    }
-}
-
-TEST(TesteListaEncadeada, InsercaoNoFim)
-{
-    using T = int;
-
-    ListaEncadeadaAbstrata<T>* lista{new MinhaListaEncadeada<T>};
-
-    std::array<Esperado<T>, 5> const esperados
-    {{
-        {0,     0},
-        {10,    1},
-        {20,    2},
-        {30,    3},
-        {40,    4}
-    }};
-
-    for (Esperado<T> const& esperado: esperados)
-        lista->inserirNoFim(esperado.dado);
-
-    ASSERT_EQ(lista->tamanho(), size(esperados));
-    ASSERT_TRUE(!lista->vazia());
-    
-    for (Esperado<T> const& esperado: esperados)
-    {
-        ASSERT_EQ(lista->posicao(esperado.dado), esperado.posicao);
-        ASSERT_TRUE(lista->contem(esperado.dado));
-    }
-
-    delete lista;
-}
-
-TEST(TesteListaEncadeada, RemocaoDoInicio)
-{
-    using T = int;
-
-    ListaEncadeadaAbstrata<T>* lista{nullptr};
-
-    // Lista vazia
-    {
-        lista = new MinhaListaEncadeada<T>;
-        ASSERT_THROW(lista->removerDoInicio(), ExcecaoListaEncadeadaVazia);
-        delete lista;
-    }
-
-    // Todos os itens
-    {
-        lista = new MinhaListaEncadeada<T>;
-
-        std::array<T, 5> const dados{0, 10, 20, 30, 40};
-
-        for (T const dado: dados)
-            lista->inserirNoFim(dado);
-        
-        constexpr std::size_t quantidadeRemover{2};
-        
-        for (std::size_t i{0}; i < quantidadeRemover; ++i)
-        {
-            ASSERT_EQ(lista->removerDoInicio(), dados[i]);
-            ASSERT_EQ(lista->tamanho(), size(dados) - i - 1);
-            ASSERT_TRUE(!lista->contem(dados[i]));
-        }
-
-        for (std::size_t i{quantidadeRemover}; i < size(dados); ++i)
-            ASSERT_EQ(lista->posicao(dados[i]), i - quantidadeRemover);
-        
-        for (std::size_t i{quantidadeRemover}; i < size(dados); ++i)
-            ASSERT_EQ(lista->removerDoInicio(), dados[i]);
-        
-        ASSERT_TRUE(lista->vazia());
-
-        delete lista;
-    }
-}
-
-TEST(TesteListaEncadeada, RemocaoDePosicao)
-{
-    using T = int;
-
-    ListaEncadeadaAbstrata<T>* lista{new MinhaListaEncadeada<T>};
-
-    std::array<T, 5> const dados{0, 10, 20, 30, 40};
-
-    for (T const dado: dados)
-        lista->inserirNoFim(dado);
-
-    std::array<Esperado<T>, 3> const esperados
-    {{
-        {dados[0],  0},  // Do início.
-        {dados[3],  2},  // Do meio.
-        {dados[4],  2}   // Do fim.
-    }};
-
-    std::size_t tamanho{size(dados)};
-    
-    for (Esperado<T> const& esperado: esperados)
-    {
-        ASSERT_EQ(lista->removerDe(esperado.posicao), esperado.dado);
-        --tamanho;
-
-        ASSERT_EQ(lista->tamanho(), tamanho);
-        ASSERT_TRUE(!lista->contem(esperado.dado));
-    }
-
-    for (std::size_t const posicao: {2, 3, 100})
-        ASSERT_THROW(lista->removerDe(posicao), ExcecaoPosicaoInvalida);
-
-    for (std::size_t i{0}; i < tamanho; ++i)
-        [[maybe_unused]] T const dado{lista->removerDoInicio()};
-    
-    for (std::size_t const posicao: {0, 1})
-        ASSERT_THROW(lista->removerDe(posicao), ExcecaoPosicaoInvalida);
-    
+    lista = arvore->preOrdem();
+    ASSERT_TRUE(lista != nullptr);
     ASSERT_TRUE(lista->vazia());
-
     delete lista;
+
+    lista = arvore->posOrdem();
+    ASSERT_TRUE(lista != nullptr);
+    ASSERT_TRUE(lista->vazia());
+    delete lista;
+    
+    delete arvore;
 }
 
-TEST(TesteListaEncadeada, RemocaoDoFim)
+TEST(ArvoreAVLTest, InsercaoSemRotacao)
 {
-    using T = int;
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
 
-    ListaEncadeadaAbstrata<T>* lista{nullptr};
+    for (int const e : {5, 3, 7, 2, 4, 6, 9})
+        arvore->inserir(e);
 
-    // Lista vazia
-    {
-        lista = new MinhaListaEncadeada<T>;
-        ASSERT_THROW(lista->removerDoFim(), ExcecaoListaEncadeadaVazia);
-        delete lista;
-    }
+    ASSERT_TRUE(!arvore->vazia());
+    ASSERT_EQ(arvore->quantidade(), 7);
 
-    // Todos os itens
-    {
-        lista = new MinhaListaEncadeada<T>;
+    ASSERT_TRUE(arvore->contem(5));
+    ASSERT_EQ(*arvore->altura(5), 2);
+    ASSERT_EQ(*arvore->filhoDireitaDe(5), 7);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(5), 3);
 
-        std::array<T, 5> const dados{0, 10, 20, 30, 40};
+    ASSERT_TRUE(arvore->contem(3));
+    ASSERT_EQ(*arvore->altura(3), 1);
+    ASSERT_EQ(*arvore->filhoDireitaDe(3), 4);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(3), 2);
 
-        for (T const dado: dados)
-            lista->inserirNoFim(dado);
-        
-        constexpr std::size_t quantidadeRemover{2};
-        
-        for (std::size_t i{0}; i < quantidadeRemover; ++i)
-        {
-            std::size_t const j{size(dados) - i - 1};
+    ASSERT_TRUE(arvore->contem(7));
+    ASSERT_EQ(*arvore->altura(7), 1);
+    ASSERT_EQ(*arvore->filhoDireitaDe(7), 9);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(7), 6);
 
-            ASSERT_EQ(lista->removerDoFim(), dados[j]);
-            ASSERT_EQ(lista->tamanho(), j);
-            ASSERT_TRUE(!lista->contem(dados[j]));
-        }
-        
-        for (std::size_t i{quantidadeRemover}; i < size(dados); ++i)
-            ASSERT_EQ(lista->removerDoFim(), dados[size(dados) - i - 1]);
-        
-        ASSERT_TRUE(lista->vazia());
+    ASSERT_TRUE(arvore->contem(2));
+    ASSERT_EQ(*arvore->altura(2), 0);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(2));
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(2));
 
-        delete lista;
-    }
-}
+    ASSERT_TRUE(arvore->contem(4));
+    ASSERT_EQ(*arvore->altura(4), 0);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(4));
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(4));
 
-TEST(TesteListaEncadeada, Remocao)
-{
-    using T = int;
+    ASSERT_TRUE(arvore->contem(6));
+    ASSERT_EQ(*arvore->altura(6), 0);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(6));
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(6));
 
-    ListaEncadeadaAbstrata<T>* lista{new MinhaListaEncadeada<T>};
+    ASSERT_TRUE(arvore->contem(9));
+    ASSERT_EQ(*arvore->altura(9), 0);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(9));
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(9));
 
-    ASSERT_THROW(lista->remover(0), ExcecaoListaEncadeadaVazia);
 
-    for (T const dado: {0, 10, 20, 30, 40, 10})
-        lista->inserirNoFim(dado);
-    
-    for (T const dado: {1, 11, 21, 31, 41})
-        ASSERT_THROW(lista->remover(dado), ExcecaoDadoInexistente);
-
-    std::size_t tamanho{lista->tamanho()};
-    
-    for (T const dado: {0, 40, 20, 30})
-    {
-        lista->remover(dado);
-        --tamanho;
-
-        ASSERT_TRUE(!lista->contem(dado));
-        ASSERT_EQ(lista->tamanho(), tamanho);
-    }
-
-    T const repetido{10};
-
-    lista->remover(repetido);
-    --tamanho;
-
-    ASSERT_TRUE(lista->contem(repetido));
-    ASSERT_EQ(lista->tamanho(), tamanho);
-
-    lista->remover(repetido);
-    --tamanho;
-
-    ASSERT_TRUE(!lista->contem(repetido));
-    ASSERT_EQ(lista->tamanho(), tamanho);
+    ListaEncadeadaAbstrata<int>* lista{arvore->preOrdem()};
+    for (int const e : {5, 3, 2, 4, 7, 6, 9})
+        ASSERT_EQ(lista->removerDoInicio(), e);
 
     delete lista;
+
+    lista = arvore->emOrdem();
+    for (int const e : {2, 3, 4, 5, 6, 7, 9})
+        ASSERT_EQ(lista->removerDoInicio(), e);
+    
+    delete lista;
+
+    lista = arvore->posOrdem();
+    for (int const e : {2, 4, 3, 6, 9, 7, 5})
+        ASSERT_EQ(lista->removerDoInicio(), e);
+
+    delete lista;
+
+    delete arvore;  
+}
+
+TEST(ArvoreAVLTest, InsercaoRotacaoDireitaSimples)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {4, 3, 2, 1})
+        arvore->inserir(e);
+
+    ASSERT_EQ(*arvore->altura(3), 2);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(3), 2);
+    ASSERT_EQ(*arvore->filhoDireitaDe(3), 4);
+
+    ASSERT_EQ(*arvore->altura(2), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(2), 1);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(2));
+
+    ASSERT_EQ(*arvore->altura(1), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(1));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(1));
+
+    ASSERT_EQ(*arvore->altura(4), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(4));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(4));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, InsercaoRotacaoEsquerdaSimples)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {1, 2, 3, 4})
+        arvore->inserir(e);
+
+    ASSERT_EQ(*arvore->altura(3), 1);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(3));
+    ASSERT_EQ(*arvore->filhoDireitaDe(3), 4);
+
+    ASSERT_EQ(*arvore->altura(2), 2);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(2), 1);
+    ASSERT_EQ(*arvore->filhoDireitaDe(2), 3);
+
+    ASSERT_EQ(*arvore->altura(1), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(1));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(1));
+
+    ASSERT_EQ(*arvore->altura(4), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(4));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(4));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, InsercaoRotacaoEsquerdaDireita)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {6, 4, 8, 2, 7, 9, 3})
+        arvore->inserir(e);
+
+    ASSERT_EQ(*arvore->altura(2), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(2));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(2));
+
+    ASSERT_EQ(*arvore->altura(3), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(3), 2);
+    ASSERT_EQ(*arvore->filhoDireitaDe(3), 4);
+
+    ASSERT_EQ(*arvore->altura(4), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(4));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(4));
+
+    ASSERT_EQ(*arvore->altura(6), 2);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(6), 3);
+    ASSERT_EQ(*arvore->filhoDireitaDe(6), 8);
+
+    ASSERT_EQ(*arvore->altura(8), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(8), 7);
+    ASSERT_EQ(*arvore->filhoDireitaDe(8), 9);
+
+    ASSERT_EQ(*arvore->altura(7), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(7));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(7));
+
+    ASSERT_EQ(*arvore->altura(9), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(9));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(9));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, InsercaoRotacaoDireitaEsquerda)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {1, 2, 3, 4, 5, 6, 7, 16, 15})
+        arvore->inserir(e);
+
+    ASSERT_EQ(*arvore->altura(1), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(1));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(1));
+
+    ASSERT_EQ(*arvore->altura(2), 1);
+    ASSERT_EQ(arvore->filhoEsquerdaDe(2).value(), 1);
+    ASSERT_EQ(arvore->filhoDireitaDe(2).value(), 3);
+
+    ASSERT_EQ(*arvore->altura(3), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(3));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(3));
+
+    ASSERT_EQ(*arvore->altura(4), 3);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(4), 2);
+    ASSERT_EQ(*arvore->filhoDireitaDe(4), 6);
+
+    ASSERT_EQ(*arvore->altura(5), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(5));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(5));
+
+    ASSERT_EQ(*arvore->altura(6), 2);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(6), 5);
+    ASSERT_EQ(*arvore->filhoDireitaDe(6), 15);
+
+    ASSERT_EQ(*arvore->altura(7), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(7));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(7));
+
+    ASSERT_EQ(*arvore->altura(15), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(15), 7);
+    ASSERT_EQ(*arvore->filhoDireitaDe(15), 16);
+
+    ASSERT_EQ(*arvore->altura(16), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(16));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(16));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, RemocaoSemRotacao)
+{
+    ArvoreBinariaDeBusca<int>* arvore{new MinhaArvoreAVL<int>};
+
+    for (int const e : {5, 3, 7, 2, 4, 6, 9})
+        arvore->inserir(e);
+
+    //Testa remover folha
+    arvore->remover(9);
+    ASSERT_TRUE(!arvore->contem(9));
+    ASSERT_EQ(arvore->quantidade(), 6);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(7));
+    
+    //Testa remover folha
+    arvore->remover(6);
+    ASSERT_TRUE(!arvore->contem(6));
+    ASSERT_EQ(arvore->quantidade(), 5);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(7));
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(7));
+    
+    //Testa remover raiz
+    arvore->inserir(6);
+    arvore->inserir(9);
+    arvore->remover(5);
+    ASSERT_TRUE(!arvore->contem(5));
+    ASSERT_EQ(arvore->quantidade(), 6);
+    ASSERT_EQ(*arvore->filhoDireitaDe(6), 7);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(6), 3);
+    ASSERT_EQ(*arvore->filhoDireitaDe(7), 9);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(7));
+
+    //Testa remover nodo com filhoDireita sem descendente a esquerda
+    arvore->inserir(5);
+    ASSERT_EQ(*arvore->filhoDireitaDe(4), 5);
+    ASSERT_EQ(*arvore->altura(6), 3);
+    ASSERT_EQ(*arvore->altura(4), 1);
+    arvore->remover(3);
+    ASSERT_TRUE(!arvore->contem(3));
+    ASSERT_EQ(arvore->quantidade(), 6);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(6), 4);
+    ASSERT_EQ(*arvore->filhoDireitaDe(6), 7);
+    ASSERT_EQ(*arvore->altura(6), 2);
+
+    ASSERT_EQ(*arvore->filhoDireitaDe(4), 5);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(4), 2);
+
+    delete arvore;
+
+    // Testa esvaziar a árvore.
+
+    arvore = new MinhaArvoreAVL<int>;
+
+    for (int const e : {3, 2, 4})
+        arvore->inserir(e);
+
+    ASSERT_EQ(arvore->quantidade(), 3);
+
+    for (int const e : {3, 2, 4})
+        arvore->remover(e);
+
+    ASSERT_EQ(arvore->quantidade(), 0);
+
+    // Testa remover item não contido na árvore.
+
+    arvore->inserir(2);
+    ASSERT_TRUE(arvore->contem(2));
+    ASSERT_EQ(arvore->quantidade(), 1);
+
+    arvore->remover(3);
+    ASSERT_TRUE(arvore->contem(2));
+    ASSERT_EQ(arvore->quantidade(), 1);
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, RemocaoRotacaoDireitaSimples)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {50, 25, 75, 12, 37})
+        arvore->inserir(e);
+    
+    arvore->remover(75);
+
+    ASSERT_EQ(*arvore->altura(25), 2);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(25), 12);
+    ASSERT_EQ(*arvore->filhoDireitaDe(25), 50);
+
+    ASSERT_EQ(*arvore->altura(12), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(12));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(12));
+
+    ASSERT_EQ(*arvore->altura(50), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(50), 37);
+    ASSERT_TRUE(!arvore->filhoDireitaDe(50));
+
+    ASSERT_EQ(*arvore->altura(37), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(37));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(37));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, RemocaoRotacaoEsquerdaSimples)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {50, 25, 75, 62, 87})
+        arvore->inserir(e);
+    
+    arvore->remover(25);
+
+    ASSERT_EQ(*arvore->altura(75), 2);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(75), 50);
+    ASSERT_EQ(*arvore->filhoDireitaDe(75), 87);
+
+    ASSERT_EQ(*arvore->altura(50), 1);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(50));
+    ASSERT_EQ(arvore->filhoDireitaDe(50), 62);
+
+    ASSERT_EQ(*arvore->altura(87), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(87));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(87));
+
+    ASSERT_EQ(*arvore->altura(62), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(62));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(62));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, RemocaoRotacaoEsquerdaDireita)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {50, 25, 75, 37})
+        arvore->inserir(e);
+    
+    arvore->remover(75);
+
+    ASSERT_EQ(*arvore->altura(37), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(37), 25);
+    ASSERT_EQ(*arvore->filhoDireitaDe(37), 50);
+
+    ASSERT_EQ(*arvore->altura(25), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(25));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(25));
+
+    ASSERT_EQ(*arvore->altura(50), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(50));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(50));
+
+    delete arvore;
+}
+
+TEST(ArvoreAVLTest, RemocaoRotacaoDireitaEsquerda)
+{
+    ArvoreBinariaDeBusca<int>* const arvore{new MinhaArvoreAVL<int>};
+    
+    for (int const e : {50, 25, 75, 62})
+        arvore->inserir(e);
+    
+    arvore->remover(25);
+
+    ASSERT_EQ(*arvore->altura(62), 1);
+    ASSERT_EQ(*arvore->filhoEsquerdaDe(62), 50);
+    ASSERT_EQ(*arvore->filhoDireitaDe(62), 75);
+
+    ASSERT_EQ(*arvore->altura(50), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(50));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(50));
+
+    ASSERT_EQ(*arvore->altura(75), 0);
+    ASSERT_TRUE(!arvore->filhoEsquerdaDe(75));
+    ASSERT_TRUE(!arvore->filhoDireitaDe(75));
+
+    delete arvore;
 }
 
 int main(int argc, char **argv)
 {
-  InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

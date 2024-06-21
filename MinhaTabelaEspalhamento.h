@@ -68,20 +68,6 @@ public:
         return -1;
     };
 
-    /**
-     * @brief Obtém a posição de um dado na tabela e o tamanho da lista em que
-     * se encontra.
-     *
-     * @param dado O dado sendo buscado.
-     * @return A posição do dado na tabela estando ele ou não na tabela e, caso
-     * esteja, a posição na lista.
-     */
-    Posicao posicao(T dado) const
-    {
-        // substitua a linha abaixo pelo algoritmo esperado
-        return Posicao{0, 0, 0};
-    };
-
 protected:
     /**
      * @brief Obtém a posição correspondente na tabela para o dado.

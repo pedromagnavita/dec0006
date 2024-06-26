@@ -96,13 +96,14 @@ protected:
     virtual std::size_t funcaoEspalhamento(T dado) const
     {
         // substitua a linha abaixo pelo algoritmo esperado
-        if constexpr(!std::is_integral<T>::value){
-                size_t result = codigoEspalhamento(dado);
-                return (result % capac);
-            }
-            else{
-                return (static_cast<size_t>(dado) % capac); 
-            }
+        if constexpr(std::is_integral_v<T>)
+        {
+            return codigoEspalhamento(dado) % capac;
+        }
+        else
+        {
+            return codigoEspalhamento(dado) % capac;
+        }
     };
 
 private:
@@ -130,11 +131,11 @@ private:
     {
         // Implemente aqui.
         size_t hash = 0;
-        size_t expoente = string.size() - 1;
+        size_t n = string.length() - 1;
 
         for(char c : string) {
-            hash += static_cast<std::size_t>(c) * pow(31, expoente);
-            expoente --;
+            hash += static_cast<std::size_t>(c) * pow(31, n);
+            n --;
         }
         return hash;
     }

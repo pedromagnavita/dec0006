@@ -7,6 +7,8 @@
 // TabelaEspalhamentoAbstrata
 #include "excecoes.h"
 // ExcecaoDadoInexistente
+#include <cmath>
+#include <string>
 
 template <typename T, std::size_t capac>
 class MinhaTabelaEspalhamento final : public TabelaEspalhamentoAbstrata<T, capac>
@@ -21,7 +23,7 @@ public:
     virtual std::size_t capacidade() const
     {
         // substitua a linha abaixo pelo algoritmo esperado
-        return -1;
+        return capac;
     };
 
     /**
@@ -33,6 +35,11 @@ public:
     virtual void inserir(T dado) 
     {
         // escreva o algoritmo esperado
+        std::size_t posicao = funcaoEspalhamento(dado);
+        if(!this->tabela[posicao].contem(dado)) {
+            this->tabela[posicao].inserirNoFim(dado); 
+            totalElementos++;
+        }
     };
 
     /**
@@ -43,6 +50,13 @@ public:
      */
     virtual void remover(T dado) {
         // escreva o algoritmo esperado
+        size_t posicao = funcaoEspalhamento(dado);
+        if(this->tabela[posicao].contem(dado)) {
+        this->tabela[posicao].remover(dado);
+        totalElementos--;
+        } else {
+            throw ExcecaoDadoInexistente();
+        }
     };
 
     /**
@@ -54,7 +68,8 @@ public:
     virtual bool contem(T dado) const
     {
         // substitua a linha abaixo pelo algoritmo esperado
-        return false;
+        std::size_t posicao = funcaoEspalhamento(dado);
+        return this->tabela[posicao].contem(dado);
     };
 
     /**
@@ -65,7 +80,7 @@ public:
     virtual std::size_t quantidade() const
     {
         // substitua a linha abaixo pelo algoritmo esperado
-        return -1;
+        return totalElementos;
     };
 
 protected:
@@ -75,10 +90,19 @@ protected:
      * @param dado O dado.
      * @return Um inteiro na faixa [0, capacidade).
      */
+
+    int totalElementos = 0;
+
     virtual std::size_t funcaoEspalhamento(T dado) const
     {
         // substitua a linha abaixo pelo algoritmo esperado
-        return -1;
+        if constexpr(!std::is_integral<T>::value){
+                size_t result = codigoEspalhamento(dado);
+                return (result % capac);
+            }
+            else{
+                return (static_cast<size_t>(dado) % capac); 
+            }
     };
 
 private:
@@ -93,7 +117,7 @@ private:
     std::size_t codigoEspalhamento(U integral) const
     {
         // substitua a linha abaixo pelo algoritmo esperado. Dica use std::is_integral_v<U> para garantir que U é um tipo integral
-        return 0;
+        return static_cast<size_t>(integral);
     };
 
     /**
@@ -105,7 +129,14 @@ private:
     std::size_t codigoEspalhamento(std::string const &string) const
     {
         // Implemente aqui.
-        return 0;
+        size_t hash = 0;
+        size_t expoente = string.size() - 1;
+
+        for(char c : string) {
+            hash += static_cast<std::size_t>(c) * pow(31, expoente);
+            expoente --;
+        }
+        return hash;
     }
 };
 
